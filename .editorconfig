@@ -1,0 +1,101 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+trim_trailing_whitespace = true
+
+# Java files
+[*.java]
+indent_style = space
+indent_size = 4
+continuation_indent_size = 8
+max_line_length = 120
+
+# XML files
+[*.{xml,xsd}]
+indent_style = space
+indent_size = 4
+
+# Properties files
+[*.properties]
+indent_style = space
+indent_size = 4
+
+# YAML files
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# SQL files
+[*.sql]
+indent_style = space
+indent_size = 4
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Documentation
+[*.{txt,md,adoc}]
+max_line_length = off
+
+# Web files
+[*.{htm,html,js,ts,css,scss,less}]
+indent_style = space
+indent_size = 2
+
+# Configuration files
+[{*.gradle,build.gradle,gradle.properties,settings.gradle}]
+indent_style = space
+indent_size = 4
+
+# Maven files
+[pom.xml]
+indent_style = space
+indent_size = 4
+
+# Docker files
+[{Dockerfile,docker-compose.yml}]
+indent_style = space
+indent_size = 2
+
+# Git files
+[.git*]
+indent_style = tab
+indent_size = 4
+
+# Make files
+[Makefile]
+indent_style = tab
+indent_size = 4
+
+# Batch files
+[*.{cmd,bat}]
+end_of_line = crlf
+
+# Ignore paths
+[/target/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
