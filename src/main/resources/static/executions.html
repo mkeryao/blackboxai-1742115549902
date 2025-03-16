@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Execution Records - JobFlow</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <img class="h-8 w-auto" src="/images/logo.svg" alt="JobFlow">
+                        <span class="ml-2 text-xl font-bold text-gray-800">JobFlow</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="/index.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Dashboard
+                        </a>
+                        <a href="/tasks.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Tasks
+                        </a>
+                        <a href="/workflows.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Workflows
+                        </a>
+                        <a href="/executions.html" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Executions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    Execution Records
+                </h2>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4">
+                <button type="button" id="exportBtn" class="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-download mr-2"></i>
+                    Export
+                </button>
+                <button type="button" id="refreshBtn" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-6">
+                    <div class="sm:col-span-1">
+                        <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
+                        <select id="type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">All</option>
+                            <option value="TASK">Task</option>
+                            <option value="WORKFLOW">Workflow</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">All</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="RUNNING">Running</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="FAILED">Failed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="TIMEOUT">Timeout</option>
+                            <option value="RETRY">Retry</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="startTime" class="block text-sm font-medium text-gray-700">Start Time</label>
+                        <input type="datetime-local" id="startTime" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="endTime" class="block text-sm font-medium text-gray-700">End Time</label>
+                        <input type="datetime-local" id="endTime" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button type="button" id="applyFilters" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-6">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-2xl text-green-500"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Success Rate</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900" id="successRate">0%</div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-clock text-2xl text-blue-500"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Average Duration</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900" id="avgDuration">0s</div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-play-circle text-2xl text-purple-500"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Executions</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900" id="totalExecutions">0</div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-2xl text-red-500"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Failed Executions</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900" id="failedExecutions">0</div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Execution Records Table -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex flex-col">
+                    <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                        <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                            <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                ID/Type
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Status
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Start Time
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Duration
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Executor
+                                            </th>
+                                            <th scope="col" class="relative px-6 py-3">
+                                                <span class="sr-only">Actions</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="executionRecords" class="bg-white divide-y divide-gray-200">
+                                        <!-- Records will be inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Execution Details Modal -->
+    <div id="executionDetailsModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">
+                                Execution Details
+                            </h3>
+                            <div class="mt-4 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Execution ID</label>
+                                    <p id="modalExecutionId" class="mt-1 text-sm text-gray-900"></p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                                    <p id="modalStatus" class="mt-1 text-sm text-gray-900"></p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Duration</label>
+                                    <p id="modalDuration" class="mt-1 text-sm text-gray-900"></p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Input Parameters</label>
+                                    <pre id="modalInputParams" class="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded"></pre>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Output Result</label>
+                                    <pre id="modalOutputResult" class="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded"></pre>
+                                </div>
+                                <div id="modalErrorSection" class="hidden">
+                                    <label class="block text-sm font-medium text-red-700">Error Message</label>
+                                    <pre id="modalErrorMessage" class="mt-1 text-sm text-red-900 bg-red-50 p-2 rounded"></pre>
+                                    <label class="block text-sm font-medium text-red-700 mt-2">Stack Trace</label>
+                                    <pre id="modalStackTrace" class="mt-1 text-sm text-red-900 bg-red-50 p-2 rounded overflow-auto max-h-40"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="closeModal('executionDetailsModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/app.js"></script>
+    <script>
+        // Initialize execution records page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExecutionRecords();
+            loadStatistics();
+            setupEventListeners();
+        });
+
+        // Load execution records
+        async function loadExecutionRecords() {
+            try {
+                const loader = JobFlow.UI.showLoading();
+                const type = document.getElementById('type').value;
+                const status = document.getElementById('status').value;
+                const startTime = document.getElementById('startTime').value;
+                const endTime = document.getElementById('endTime').value;
+
+                const records = await JobFlow.api.searchExecutions({
+                    type, status, startTime, endTime
+                });
+
+                renderExecutionRecords(records);
+                JobFlow.UI.hideLoading(loader);
+            } catch (error) {
+                JobFlow.UI.showNotification(error.message, 'error');
+            }
+        }
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const startTime = document.getElementById('startTime').value;
+                const endTime = document.getElementById('endTime').value;
+                
+                const stats = await JobFlow.api.getExecutionMetrics(startTime, endTime);
+                updateStatistics(stats);
+            } catch (error) {
+                JobFlow.UI.showNotification(error.message, 'error');
+            }
+        }
+
+        // Render execution records
+        function renderExecutionRecords(records) {
+            const tbody = document.getElementById('executionRecords');
+            tbody.innerHTML = records.map(record => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${record.executionId}</div>
+                        <div class="text-sm text-gray-500">${record.type}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(record.status)}">
+                            ${record.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${formatDate(record.startTime)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${formatDuration(record.duration)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${record.executor}</div>
+                        <div class="text-sm text-gray-500">${record.executorIp}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="showExecutionDetails('${record.executionId}')" class="text-indigo-600 hover:text-indigo-900">
+                            Details
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Update statistics
+        function updateStatistics(stats) {
+            document.getElementById('successRate').textContent = `${(stats.successRate * 100).toFixed(1)}%`;
+            document.getElementById('avgDuration').textContent = formatDuration(stats.averageExecutionTime);
+            document.getElementById('totalExecutions').textContent = stats.totalExecutions;
+            document.getElementById('failedExecutions').textContent = stats.failedExecutions;
+        }
+
+        // Show execution details
+        async function showExecutionDetails(executionId) {
+            try {
+                const loader = JobFlow.UI.showLoading();
+                const record = await JobFlow.api.getByExecutionId(executionId);
+                
+                document.getElementById('modalExecutionId').textContent = record.executionId;
+                document.getElementById('modalStatus').textContent = record.status;
+                document.getElementById('modalDuration').textContent = formatDuration(record.duration);
+                document.getElementById('modalInputParams').textContent = JSON.stringify(record.inputParams, null, 2);
+                document.getElementById('modalOutputResult').textContent = JSON.stringify(record.outputResult, null, 2);
+
+                const errorSection = document.getElementById('modalErrorSection');
+                if (record.errorMessage) {
+                    errorSection.classList.remove('hidden');
+                    document.getElementById('modalErrorMessage').textContent = record.errorMessage;
+                    document.getElementById('modalStackTrace').textContent = record.stackTrace;
+                } else {
+                    errorSection.classList.add('hidden');
+                }
+
+                document.getElementById('executionDetailsModal').classList.remove('hidden');
+                JobFlow.UI.hideLoading(loader);
+            } catch (error) {
+                JobFlow.UI.showNotification(error.message, 'error');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('applyFilters').addEventListener('click', () => {
+                loadExecutionRecords();
+                loadStatistics();
+            });
+
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                loadExecutionRecords();
+                loadStatistics();
+            });
+
+            document.getElementById('exportBtn').addEventListener('click', async () => {
+                try {
+                    const startTime = document.getElementById('startTime').value;
+                    const endTime = document.getElementById('endTime').value;
+                    
+                    const loader = JobFlow.UI.showLoading();
+                    const data = await JobFlow.api.exportExecutionRecords(startTime, endTime, 'csv');
+                    JobFlow.UI.hideLoading(loader);
+                    
+                    // Create download link
+                    const blob = new Blob([data], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'execution_records.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                } catch (error) {
+                    JobFlow.UI.showNotification(error.message, 'error');
+                }
+            });
+        }
+
+        // Helper functions
+        function getStatusClass(status) {
+            const classes = {
+                PENDING: 'bg-yellow-100 text-yellow-800',
+                RUNNING: 'bg-blue-100 text-blue-800',
+                COMPLETED: 'bg-green-100 text-green-800',
+                FAILED: 'bg-red-100 text-red-800',
+                CANCELLED: 'bg-gray-100 text-gray-800',
+                TIMEOUT: 'bg-orange-100 text-orange-800',
+                RETRY: 'bg-purple-100 text-purple-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        function formatDuration(duration) {
+            if (!duration) return 'N/A';
+            
+            const seconds = Math.floor(duration / 1000);
+            if (seconds < 60) return `${seconds}s`;
+            
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
+            
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            return `${hours}h ${remainingMinutes}m ${remainingSeconds}s`;
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
