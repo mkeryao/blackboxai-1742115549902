@@ -1,0 +1,77 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'jobflow'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['app:8080']
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql:3306']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Alert rules
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# Remote write configuration
+remote_write:
+  # - url: http://remote-write-endpoint/api/v1/write
+
+# Remote read configuration
+remote_read:
+  # - url: http://remote-read-endpoint/api/v1/read
+
+# Storage configuration
+storage:
+  tsdb:
+    retention_time: 15d
+    retention_size: 5GB
+
+# Web configuration
+web:
+  external_url: http://localhost:9090
+  page_title: JobFlow Prometheus
+  cors:
+    origin: '*'
+
+# Query configuration
+query:
+  max_samples: 50000000
+  timeout: 2m
+  max_concurrency: 20
+
+# Scrape configuration
+scrape_config:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+
+# TLS configuration
+tls_config:
+  insecure_skip_verify: false
+
+# Basic auth configuration
+basic_auth:
+  # username: admin
+  # password: admin
+
+# Exemplars configuration
+exemplars:
+  max_exemplars: 100000
