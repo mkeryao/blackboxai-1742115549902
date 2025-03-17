@@ -1,117 +1,59 @@
 package com.jobflow.dao;
 
 import com.jobflow.domain.ExecutionRecord;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
-public interface ExecutionRecordDao extends BaseDao<ExecutionRecord> {
+public interface ExecutionRecordDao {
 
-    @Query("SELECT e FROM ExecutionRecord e WHERE e.tenantId = :tenantId " +
-           "AND e.type = :type " +
-           "AND e.task.id = :resourceId")
-    List<ExecutionRecord> findTaskExecutions(@Param("tenantId") Long tenantId,
-                                           @Param("type") ExecutionRecord.ExecutionType type,
-                                           @Param("resourceId") Long resourceId);
+    /**
+     * Save or update execution record
+     */
+    ExecutionRecord save(ExecutionRecord record);
 
-    @Query("SELECT e FROM ExecutionRecord e WHERE e.tenantId = :tenantId " +
-           "AND e.type = :type " +
-           "AND e.workflow.id = :resourceId")
-    List<ExecutionRecord> findWorkflowExecutions(@Param("tenantId") Long tenantId,
-                                                @Param("type") ExecutionRecord.ExecutionType type,
-                                                @Param("resourceId") Long resourceId);
+    /**
+     * Find execution record by ID
+     */
+    Optional<ExecutionRecord> findById(Long id);
 
-    @Query("SELECT e FROM ExecutionRecord e WHERE e.tenantId = :tenantId " +
-           "AND e.status = :status " +
-           "AND e.nextRetryTime <= :now")
-    List<ExecutionRecord> findRetryableExecutions(@Param("tenantId") Long tenantId,
-                                                 @Param("status") ExecutionRecord.ExecutionStatus status,
-                                                 @Param("now") LocalDateTime now);
+    /**
+     * Find task executions
+     */
+    List<ExecutionRecord> findTaskExecutions(Long tenantId, ExecutionRecord.ExecutionType type, Long taskId);
 
-    @Query("SELECT e FROM ExecutionRecord e WHERE e.tenantId = :tenantId " +
-           "AND e.status IN :statuses " +
-           "AND e.startTime >= :startTime")
-    List<ExecutionRecord> findByStatusAndStartTime(@Param("tenantId") Long tenantId,
-                                                  @Param("statuses") List<ExecutionRecord.ExecutionStatus> statuses,
-                                                  @Param("startTime") LocalDateTime startTime);
+    /**
+     * Find workflow executions
+     */
+    List<ExecutionRecord> findWorkflowExecutions(Long tenantId, ExecutionRecord.ExecutionType type, Long workflowId);
 
-    @Query("SELECT e.status, COUNT(e) FROM ExecutionRecord e " +
-           "WHERE e.tenantId = :tenantId " +
-           "AND e.startTime BETWEEN :start AND :end " +
-           "GROUP BY e.status")
-    List<Object[]> getExecutionStatistics(@Param("tenantId") Long tenantId,
-                                        @Param("start") LocalDateTime start,
-                                        @Param("end") LocalDateTime end);
+    /**
+     * Find retryable executions
+     */
+    List<ExecutionRecord> findRetryableExecutions(Long tenantId, ExecutionRecord.ExecutionStatus status, LocalDateTime now);
 
-    @Query("SELECT AVG(e.duration) FROM ExecutionRecord e " +
-           "WHERE e.tenantId = :tenantId " +
-           "AND e.type = :type " +
-           "AND e.status = 'COMPLETED' " +
-           "AND e.startTime BETWEEN :start AND :end")
-    Double getAverageExecutionTime(@Param("tenantId") Long tenantId,
-                                 @Param("type") ExecutionRecord.ExecutionType type,
-                                 @Param("start") LocalDateTime start,
-                                 @Param("end") LocalDateTime end);
+    /**
+     * Find executions by status and start time
+     */
+    List<ExecutionRecord> findByStatusAndStartTime(Long tenantId, List<ExecutionRecord.ExecutionStatus> statuses, LocalDateTime startTime);
 
-    @Query("SELECT e FROM ExecutionRecord e " +
-           "WHERE e.tenantId = :tenantId " +
-           "AND e.status = 'RUNNING' " +
-           "AND e.startTime <= :timeout")
-    List<ExecutionRecord> findTimedOutExecutions(@Param("tenantId") Long tenantId,
-                                                @Param("timeout") LocalDateTime timeout);
+    /**
+     * Get execution statistics
+     */
+    List<Object[]> getExecutionStatistics(Long tenantId, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT e FROM ExecutionRecord e " +
-           "LEFT JOIN FETCH e.task t " +
-           "LEFT JOIN FETCH e.workflow w " +
-           "WHERE e.tenantId = :tenantId " +
-           "AND e.executionId = :executionId")
-    ExecutionRecord findByExecutionId(@Param("tenantId") Long tenantId,
-                                    @Param("executionId") String executionId);
+    /**
+     * Get average execution time
+     */
+    Double getAverageExecutionTime(Long tenantId, ExecutionRecord.ExecutionType type, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT e FROM ExecutionRecord e " +
-           "WHERE e.tenantId = :tenantId " +
-           "AND (:type IS NULL OR e.type = :type) " +
-           "AND (:status IS NULL OR e.status = :status) " +
-           "AND (:startTime IS NULL OR e.startTime >= :startTime) " +
-           "AND (:endTime IS NULL OR e.startTime <= :endTime) " +
-           "AND (:resourceId IS NULL OR (e.type = 'TASK' AND e.task.id = :resourceId) " +
-           "     OR (e.type = 'WORKFLOW' AND e.workflow.id = :resourceId))")
-    Page<ExecutionRecord> searchExecutions(@Param("tenantId") Long tenantId,
-                                         @Param("type") ExecutionRecord.ExecutionType type,
-                                         @Param("status") ExecutionRecord.ExecutionStatus status,
-                                         @Param("startTime") LocalDateTime startTime,
-                                         @Param("endTime") LocalDateTime endTime,
-                                         @Param("resourceId") Long resourceId,
-                                         Pageable pageable);
+    /**
+     * Find timed out executions
+     */
+    List<ExecutionRecord> findTimedOutExecutions(Long tenantId, LocalDateTime timeout);
 
-    @Query("SELECT new map(" +
-           "e.type as type, " +
-           "e.status as status, " +
-           "COUNT(e) as count, " +
-           "AVG(e.duration) as avgDuration, " +
-           "MIN(e.duration) as minDuration, " +
-           "MAX(e.duration) as maxDuration) " +
-           "FROM ExecutionRecord e " +
-           "WHERE e.tenantId = :tenantId " +
-           "AND e.startTime BETWEEN :start AND :end " +
-           "GROUP BY e.type, e.status")
-    List<Map<String, Object>> getDetailedStatistics(@Param("tenantId") Long tenantId,
-                                                   @Param("start") LocalDateTime start,
-                                                   @Param("end") LocalDateTime end);
-
-    @Query("SELECT COUNT(e) > 0 FROM ExecutionRecord e " +
-           "WHERE e.tenantId = :tenantId " +
-           "AND e.type = :type " +
-           "AND e.status = 'RUNNING' " +
-           "AND (:taskId IS NULL OR e.task.id = :taskId) " +
-           "AND (:workflowId IS NULL OR e.workflow.id = :workflowId)")
-    boolean hasRunningExecution(@Param("tenantId") Long tenantId,
-                              @Param("type") ExecutionRecord.ExecutionType type,
-                              @Param("taskId") Long taskId,
-                              @Param("workflowId") Long workflowId);
+    /**
+     * Find execution by execution ID
+     */
+    ExecutionRecord findByExecutionId(Long tenantId, String executionId);
 }
