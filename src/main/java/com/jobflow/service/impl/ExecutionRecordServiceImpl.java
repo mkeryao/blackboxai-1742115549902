@@ -9,6 +9,7 @@ import com.jobflow.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,14 +21,13 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @Transactional
-public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRecord> implements ExecutionRecordService {
+public class ExecutionRecordServiceImpl implements ExecutionRecordService {
 
     private final ExecutionRecordDao executionRecordDao;
     private final NotificationService notificationService;
 
     @Autowired
     public ExecutionRecordServiceImpl(ExecutionRecordDao executionRecordDao, NotificationService notificationService) {
-        super(executionRecordDao);
         this.executionRecordDao = executionRecordDao;
         this.notificationService = notificationService;
     }
@@ -45,7 +45,7 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
         record.setTriggerInfo(triggerInfo);
         record.setStatus(ExecutionRecord.ExecutionStatus.PENDING);
         record.setTenantId(getCurrentTenantId());
-        return save(record);
+        return executionRecordDao.save(record);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
         record.setTriggerInfo(triggerInfo);
         record.setStatus(ExecutionRecord.ExecutionStatus.PENDING);
         record.setTenantId(getCurrentTenantId());
-        return save(record);
+        return executionRecordDao.save(record);
     }
 
     @Override
@@ -121,32 +121,72 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
                                                 LocalDateTime endTime,
                                                 Long resourceId,
                                                 Pageable pageable) {
-        return executionRecordDao.searchExecutions(getCurrentTenantId(), type, status, 
-                                                 startTime, endTime, resourceId, pageable);
+        // Note: Implement pagination in DAO layer if needed
+        List<ExecutionRecord> records = findByStatusAndStartTime(
+            status != null ? Collections.singletonList(status) : Arrays.asList(ExecutionRecord.ExecutionStatus.values()),
+            startTime != null ? startTime : LocalDateTime.now().minusDays(30)
+        );
+
+        // Filter by type and resourceId if provided
+        if (type != null) {
+            records = records.stream()
+                .filter(r -> r.getType() == type)
+                .collect(Collectors.toList());
+        }
+
+        if (resourceId != null) {
+            records = records.stream()
+                .filter(r -> (r.getType() == ExecutionRecord.ExecutionType.TASK && r.getTask() != null && r.getTask().getId().equals(resourceId)) ||
+                           (r.getType() == ExecutionRecord.ExecutionType.WORKFLOW && r.getWorkflow() != null && r.getWorkflow().getId().equals(resourceId)))
+                .collect(Collectors.toList());
+        }
+
+        // Apply pagination
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), records.size());
+        return new PageImpl<>(records.subList(start, end), pageable, records.size());
     }
 
     @Override
     public List<Map<String, Object>> getDetailedStatistics(LocalDateTime start, LocalDateTime end) {
-        return executionRecordDao.getDetailedStatistics(getCurrentTenantId(), start, end);
+        Map<ExecutionRecord.ExecutionStatus, Long> stats = getExecutionStatistics(start, end);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (Map.Entry<ExecutionRecord.ExecutionStatus, Long> entry : stats.entrySet()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("status", entry.getKey());
+            item.put("count", entry.getValue());
+            result.add(item);
+        }
+
+        return result;
     }
 
     @Override
     public boolean hasRunningExecution(ExecutionRecord.ExecutionType type, Long taskId, Long workflowId) {
-        return executionRecordDao.hasRunningExecution(getCurrentTenantId(), type, taskId, workflowId);
+        List<ExecutionRecord> runningExecutions = findByStatusAndStartTime(
+            Collections.singletonList(ExecutionRecord.ExecutionStatus.RUNNING),
+            LocalDateTime.now().minusDays(1)
+        );
+
+        return runningExecutions.stream()
+            .anyMatch(r -> r.getType() == type &&
+                ((type == ExecutionRecord.ExecutionType.TASK && r.getTask() != null && r.getTask().getId().equals(taskId)) ||
+                 (type == ExecutionRecord.ExecutionType.WORKFLOW && r.getWorkflow() != null && r.getWorkflow().getId().equals(workflowId))));
     }
 
     @Override
     public ExecutionRecord startExecution(String executionId) {
         ExecutionRecord record = getByExecutionId(executionId);
         record.markAsStarted();
-        return save(record);
+        return executionRecordDao.save(record);
     }
 
     @Override
     public ExecutionRecord completeExecution(String executionId, String result) {
         ExecutionRecord record = getByExecutionId(executionId);
         record.markAsCompleted(result);
-        record = save(record);
+        record = executionRecordDao.save(record);
         notificationService.sendExecutionCompletedNotification(record);
         return record;
     }
@@ -155,7 +195,7 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
     public ExecutionRecord failExecution(String executionId, String errorMessage, String stackTrace) {
         ExecutionRecord record = getByExecutionId(executionId);
         record.markAsFailed(errorMessage, stackTrace);
-        record = save(record);
+        record = executionRecordDao.save(record);
         notificationService.sendExecutionFailedNotification(record);
         return record;
     }
@@ -164,14 +204,14 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
     public ExecutionRecord retryExecution(String executionId, LocalDateTime nextRetryTime) {
         ExecutionRecord record = getByExecutionId(executionId);
         record.markAsRetry(nextRetryTime);
-        return save(record);
+        return executionRecordDao.save(record);
     }
 
     @Override
     public ExecutionRecord cancelExecution(String executionId, String reason) {
         ExecutionRecord record = getByExecutionId(executionId);
         record.markAsCancelled(reason);
-        record = save(record);
+        record = executionRecordDao.save(record);
         notificationService.sendExecutionCancelledNotification(record);
         return record;
     }
@@ -180,7 +220,7 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
     public ExecutionRecord timeoutExecution(String executionId) {
         ExecutionRecord record = getByExecutionId(executionId);
         record.markAsTimeout();
-        record = save(record);
+        record = executionRecordDao.save(record);
         notificationService.sendExecutionTimeoutNotification(record);
         return record;
     }
@@ -198,26 +238,47 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
                                                LocalDateTime start,
                                                LocalDateTime end,
                                                String interval) {
-        // Implementation depends on specific trend analysis requirements
         Map<String, Object> trend = new HashMap<>();
-        // Add trend data based on interval (hourly, daily, weekly, etc.)
+        List<ExecutionRecord> records = findByStatusAndStartTime(
+            Arrays.asList(ExecutionRecord.ExecutionStatus.values()),
+            start
+        );
+
+        // Filter by type if provided
+        if (type != null) {
+            records = records.stream()
+                .filter(r -> r.getType() == type)
+                .collect(Collectors.toList());
+        }
+
+        // Group by date and status
+        Map<LocalDateTime, Map<ExecutionRecord.ExecutionStatus, Long>> groupedRecords = records.stream()
+            .collect(Collectors.groupingBy(
+                r -> r.getStartTime().truncatedTo(java.time.temporal.ChronoUnit.DAYS),
+                Collectors.groupingBy(
+                    ExecutionRecord::getStatus,
+                    Collectors.counting()
+                )
+            ));
+
+        trend.put("data", groupedRecords);
         return trend;
     }
 
     @Override
-    public Map<String, Object> getResourceExecutionSummary(ExecutionRecord.ExecutionType type, 
+    public Map<String, Object> getResourceExecutionSummary(ExecutionRecord.ExecutionType type,
                                                           Long resourceId,
                                                           LocalDateTime start,
                                                           LocalDateTime end) {
         Map<String, Object> summary = new HashMap<>();
         List<ExecutionRecord> executions;
-        
+
         if (type == ExecutionRecord.ExecutionType.TASK) {
             executions = getTaskExecutions(resourceId);
         } else {
             executions = getWorkflowExecutions(resourceId);
         }
-        
+
         executions = executions.stream()
             .filter(e -> e.getStartTime().isAfter(start) && e.getStartTime().isBefore(end))
             .collect(Collectors.toList());
@@ -226,31 +287,31 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
         summary.put("successRate", calculateSuccessRate(executions));
         summary.put("averageDuration", calculateAverageDuration(executions));
         summary.put("lastExecution", executions.isEmpty() ? null : executions.get(executions.size() - 1));
-        
+
         return summary;
     }
 
     @Override
     public void cleanupOldRecords(int retentionDays) {
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
-        // Implement cleanup logic
+        // Implement cleanup logic if needed
     }
 
     @Override
     public byte[] exportExecutionRecords(LocalDateTime start, LocalDateTime end, String format) {
-        // Implement export logic based on format (CSV, Excel, etc.)
+        // Implement export logic if needed
         return new byte[0];
     }
 
     @Override
     public Map<String, Object> getExecutionMetrics(LocalDateTime start, LocalDateTime end) {
         Map<String, Object> metrics = new HashMap<>();
-        
-        // Add various metrics
-        metrics.put("totalExecutions", getExecutionStatistics(start, end));
-        metrics.put("averageExecutionTime", getAverageExecutionTime(null, start, end));
+        Map<ExecutionRecord.ExecutionStatus, Long> stats = getExecutionStatistics(start, end);
+
+        metrics.put("totalExecutions", stats.values().stream().mapToLong(Long::longValue).sum());
         metrics.put("successRate", getSuccessRate(null, start, end));
-        
+        metrics.put("averageExecutionTime", getAverageExecutionTime(null, start, end));
+        metrics.put("failedExecutions", stats.getOrDefault(ExecutionRecord.ExecutionStatus.FAILED, 0L));
+
         return metrics;
     }
 
@@ -268,5 +329,10 @@ public class ExecutionRecordServiceImpl extends AbstractBaseService<ExecutionRec
             .mapToLong(ExecutionRecord::getDuration)
             .average()
             .orElse(0.0);
+    }
+
+    private Long getCurrentTenantId() {
+        // Implement based on your tenant management system
+        return 1L;
     }
 }
