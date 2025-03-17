@@ -2,133 +2,103 @@ package com.jobflow.domain;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
 import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Task extends BaseEntity {
-    
-    public enum TaskType {
-        HTTP,
-        SHELL,
-        SPRING_BEAN
-    }
-
-    public enum TaskStatus {
-        CREATED,
-        PENDING,
-        RUNNING,
-        SUCCESS,
-        FAILED,
-        TIMEOUT,
-        CANCELLED
-    }
-
     private String name;
     private String description;
-    private String groupName;
-    private TaskType type;
+    private String command;
+    private String cron;
+    private Integer timeout;
+    private Integer retries;
+    private Integer retryDelay;
     private TaskStatus status;
-    
-    // Task configuration
-    private String command;         // For SHELL type
-    private String url;            // For HTTP type
-    private String beanName;       // For SPRING_BEAN type
-    private String methodName;     // For SPRING_BEAN type
-    private String params;         // JSON string of parameters
-    
-    // Schedule configuration
-    private String cronExpression;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private String workCalendar;   // JSON string of work calendar configuration
-    
-    // Retry configuration
-    private Integer maxRetries;
-    private Integer currentRetries;
-    private Long retryInterval;    // in milliseconds
-    private Long timeout;          // in milliseconds
-    
-    // Notification configuration
-    private String notifyUsers;    // JSON array of user IDs
-    private Boolean notifyOnSuccess;
-    private Boolean notifyOnFailure;
-    
-    // Execution details
-    private LocalDateTime lastExecutionTime;
-    private LocalDateTime nextExecutionTime;
-    private String lastExecutionResult;
-    private Long lastExecutionDuration;  // in milliseconds
-    
-    // Task priority (lower number means higher priority)
-    private Integer priority;
-    
-    // Task enabled status
-    private Boolean enabled;
+    private TaskPriority priority;
+    private LocalDateTime startTime;  // Task scheduled start time
+    private LocalDateTime endTime;    // Task scheduled end time
+    private Long workflowId;
+    private Integer sequence;
+    private String parameters;
+    private String notification;
 
-    public Task() {
-        this.status = TaskStatus.CREATED;
-        this.maxRetries = 3;
-        this.currentRetries = 0;
-        this.retryInterval = 300000L; // 5 minutes
-        this.timeout = 3600000L;      // 1 hour
-        this.notifyOnSuccess = false;
-        this.notifyOnFailure = true;
-        this.priority = 5;
-        this.enabled = true;
+    public enum TaskStatus {
+        PENDING,    // Task is created but not yet scheduled
+        SCHEDULED,  // Task is scheduled to run
+        RUNNING,    // Task is currently running
+        COMPLETED,  // Task completed successfully
+        FAILED,     // Task failed
+        CANCELLED,  // Task was cancelled
+        TIMEOUT,    // Task timed out
+        RETRY      // Task is waiting for retry
     }
 
-    public boolean isRetryable() {
-        return this.currentRetries < this.maxRetries 
-            && (this.status == TaskStatus.FAILED || this.status == TaskStatus.TIMEOUT);
+    public enum TaskPriority {
+        LOW,
+        MEDIUM,
+        HIGH,
+        CRITICAL
     }
 
-    public boolean isExecutable() {
-        if (!this.enabled) {
-            return false;
+    // Validate task schedule
+    public boolean isValidSchedule() {
+        if (startTime == null) {
+            return true; // No schedule restrictions
         }
-
-        LocalDateTime now = LocalDateTime.now();
-        
-        if (this.startTime != null && now.isBefore(this.startTime)) {
-            return false;
+        if (endTime != null && endTime.isBefore(startTime)) {
+            return false; // End time must be after start time
         }
+        return !startTime.isBefore(LocalDateTime.now());
+    }
 
-        if (this.endTime != null && now.isAfter(this.endTime)) {
-            return false;
+    // Check if task is within its scheduled time window
+    public boolean isWithinSchedule(LocalDateTime now) {
+        if (startTime == null) {
+            return true; // No schedule restrictions
         }
-
-        return this.status != TaskStatus.RUNNING 
-            && this.status != TaskStatus.PENDING;
-    }
-
-    public void incrementRetries() {
-        this.currentRetries++;
-        if (this.currentRetries >= this.maxRetries) {
-            this.status = TaskStatus.FAILED;
+        if (now.isBefore(startTime)) {
+            return false; // Too early
         }
+        return endTime == null || !now.isAfter(endTime);
     }
 
-    public void resetRetries() {
-        this.currentRetries = 0;
+    // Check if task has expired
+    public boolean hasExpired(LocalDateTime now) {
+        return endTime != null && now.isAfter(endTime);
     }
 
-    public void markAsRunning() {
-        this.status = TaskStatus.RUNNING;
-        this.lastExecutionTime = LocalDateTime.now();
-    }
-
-    public void markAsCompleted(boolean success, String result, long duration) {
-        this.status = success ? TaskStatus.SUCCESS : TaskStatus.FAILED;
-        this.lastExecutionResult = result;
-        this.lastExecutionDuration = duration;
-        if (success) {
-            this.resetRetries();
+    // Calculate remaining time before task expires
+    public Long getRemainingTime(LocalDateTime now) {
+        if (endTime == null) {
+            return null; // No expiration
         }
+        return java.time.Duration.between(now, endTime).toSeconds();
     }
 
-    public void markAsTimeout() {
-        this.status = TaskStatus.TIMEOUT;
-        this.lastExecutionResult = "Task execution timed out after " + this.timeout + "ms";
+    // Check if task can be retried
+    public boolean canRetry() {
+        return retries != null && retries > 0;
+    }
+
+    // Get next retry time
+    public LocalDateTime getNextRetryTime(LocalDateTime lastAttempt) {
+        if (!canRetry()) {
+            return null;
+        }
+        return lastAttempt.plusSeconds(retryDelay != null ? retryDelay : 60);
+    }
+
+    // Check if task is critical
+    public boolean isCritical() {
+        return TaskPriority.CRITICAL.equals(priority);
+    }
+
+    // Check if task needs immediate attention
+    public boolean needsAttention() {
+        return TaskStatus.FAILED.equals(status) || 
+               TaskStatus.TIMEOUT.equals(status) ||
+               (TaskStatus.RETRY.equals(status) && !canRetry());
     }
 }
