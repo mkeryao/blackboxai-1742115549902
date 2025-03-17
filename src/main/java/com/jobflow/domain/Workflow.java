@@ -14,16 +14,16 @@ public class Workflow extends BaseEntity {
     private String cron;
     private WorkflowStatus status;
     private WorkflowPriority priority;
-    private LocalDateTime startTime;  // Workflow scheduled start time
-    private LocalDateTime endTime;    // Workflow scheduled end time
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private Integer timeout;
     private Integer retries;
     private Integer retryDelay;
-    private String notification;
-    private List<WorkflowDependency> dependencies;
     private String parameters;
     private Boolean concurrent;
     private String errorHandling;
+    private List<WorkflowDependency> dependencies;
+    private List<NotificationConfig> notifications;  // Multiple notification configurations
 
     public enum WorkflowStatus {
         PENDING,    // Workflow is created but not yet scheduled
@@ -127,23 +127,39 @@ public class Workflow extends BaseEntity {
         });
     }
 
-    // Get estimated duration based on historical executions
-    public Long getEstimatedDuration() {
-        // This would be implemented based on historical execution records
-        return null;
+    // Get notifications for a specific event type
+    public List<NotificationConfig> getNotificationsForEvent(NotificationConfig.NotificationType type) {
+        if (notifications == null) {
+            return List.of();
+        }
+        return notifications.stream()
+            .filter(config -> config.isEnabled() && config.shouldNotifyOn(type))
+            .toList();
     }
 
-    // Check if workflow can be paused
-    public boolean canBePaused() {
-        return WorkflowStatus.RUNNING.equals(status);
+    // Add a notification configuration
+    public void addNotification(NotificationConfig config) {
+        if (notifications == null) {
+            notifications = new java.util.ArrayList<>();
+        }
+        notifications.add(config);
     }
 
-    // Check if workflow can be resumed
-    public boolean canBeResumed() {
-        return WorkflowStatus.PAUSED.equals(status);
+    // Remove a notification configuration
+    public void removeNotification(NotificationConfig config) {
+        if (notifications != null) {
+            notifications.remove(config);
+        }
     }
 
-    // Check if workflow should be auto-retried
+    // Clear all notifications
+    public void clearNotifications() {
+        if (notifications != null) {
+            notifications.clear();
+        }
+    }
+
+    // Check if workflow should auto-retry
     public boolean shouldAutoRetry() {
         return "AUTO_RETRY".equals(errorHandling) && canRetry();
     }
