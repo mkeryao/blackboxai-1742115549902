@@ -1,199 +1,145 @@
 package com.jobflow.controller;
 
+import com.jobflow.dao.UserDao;
 import com.jobflow.domain.User;
-import com.jobflow.security.JwtTokenProvider;
-import com.jobflow.service.UserService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import com.jobflow.util.JwtUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Authentication Controller
- * 
- * Handles user authentication and token management endpoints.
- */
-@Slf4j
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthenticationController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider tokenProvider;
-    private final UserService userService;
+    private final UserDao userDao;
+    private final JwtUtils jwtUtils;
 
-    @Autowired
-    public AuthenticationController(AuthenticationManager authenticationManager,
-                                  JwtTokenProvider tokenProvider,
-                                  UserService userService) {
-        this.authenticationManager = authenticationManager;
-        this.tokenProvider = tokenProvider;
-        this.userService = userService;
-    }
-
-    /**
-     * Login endpoint
-     */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    loginRequest.getUsername(),
-                    loginRequest.getPassword()
-                )
-            );
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        // Find user by username
+        User user = userDao.findByUsername(request.getUsername())
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            User user = (User) authentication.getPrincipal();
-            String jwt = tokenProvider.generateToken(authentication);
-
-            // Update last login information
-            userService.updateLoginSuccess(user.getId(), loginRequest.getIpAddress(), "system");
-
-            return ResponseEntity.ok(new LoginResponse(jwt, user));
-        } catch (Exception e) {
-            log.error("Authentication failed for user: {}", loginRequest.getUsername(), e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Invalid username or password"));
+        // Verify password
+        if (!verifyPassword(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password");
         }
+
+        // Generate token
+        String token = jwtUtils.generateToken(user.getId(), user.getTenantId(), user.getUsername());
+
+        // Create response
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("userId", user.getId());
+        response.put("username", user.getUsername());
+        response.put("tenantId", user.getTenantId());
+
+        return ResponseEntity.ok(response);
     }
 
-    /**
-     * Refresh token endpoint
-     */
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String token) {
-        try {
-            if (token != null && token.startsWith("Bearer ")) {
-                String jwt = token.substring(7);
-                if (tokenProvider.validateToken(jwt)) {
-                    String refreshedToken = tokenProvider.refreshToken(jwt);
-                    return ResponseEntity.ok(new TokenResponse(refreshedToken));
-                }
-            }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Invalid token"));
-        } catch (Exception e) {
-            log.error("Token refresh failed", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Token refresh failed"));
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        // Check if username exists
+        if (userDao.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username already exists");
         }
+
+        // Create new user
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(hashPassword(request.getPassword()));
+        user.setEmail(request.getEmail());
+        user.setTenantId(request.getTenantId());
+        
+        user = userDao.save(user);
+
+        // Generate token
+        String token = jwtUtils.generateToken(user.getId(), user.getTenantId(), user.getUsername());
+
+        // Create response
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("userId", user.getId());
+        response.put("username", user.getUsername());
+        response.put("tenantId", user.getTenantId());
+
+        return ResponseEntity.ok(response);
     }
 
-    /**
-     * Logout endpoint
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok(new MessageResponse("Logged out successfully"));
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+        // Validate current token
+        if (!jwtUtils.validateToken(request.getToken())) {
+            throw new RuntimeException("Invalid token");
+        }
+
+        // Get user info from token
+        Long userId = jwtUtils.getUserIdFromToken(request.getToken());
+        Long tenantId = jwtUtils.getTenantIdFromToken(request.getToken());
+        String username = jwtUtils.getUsernameFromToken(request.getToken());
+
+        // Generate new token
+        String newToken = jwtUtils.generateToken(userId, tenantId, username);
+
+        // Create response
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", newToken);
+
+        return ResponseEntity.ok(response);
     }
 
-    /**
-     * Validate token endpoint
-     */
-    @GetMapping("/validate")
-    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
-        try {
-            if (token != null && token.startsWith("Bearer ")) {
-                String jwt = token.substring(7);
-                boolean isValid = tokenProvider.validateToken(jwt);
-                return ResponseEntity.ok(new ValidationResponse(isValid));
-            }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Invalid token"));
-        } catch (Exception e) {
-            log.error("Token validation failed", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Token validation failed"));
-        }
+    private boolean verifyPassword(String rawPassword, String hashedPassword) {
+        // TODO: Implement proper password hashing and verification
+        return rawPassword.equals(hashedPassword);
     }
 
-    /**
-     * Get current user endpoint
-     */
-    @GetMapping("/user")
-    public ResponseEntity<?> getCurrentUser() {
-        try {
-            User currentUser = (User) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-            return ResponseEntity.ok(currentUser);
-        } catch (Exception e) {
-            log.error("Failed to get current user", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Not authenticated"));
-        }
+    private String hashPassword(String password) {
+        // TODO: Implement proper password hashing
+        return password;
     }
 
     // Request/Response classes
-
-    @lombok.Data
     public static class LoginRequest {
         private String username;
         private String password;
-        private String ipAddress;
+
+        // Getters and setters
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
     }
 
-    @lombok.Data
-    public static class LoginResponse {
+    public static class RegisterRequest {
+        private String username;
+        private String password;
+        private String email;
+        private Long tenantId;
+
+        // Getters and setters
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public Long getTenantId() { return tenantId; }
+        public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
+    }
+
+    public static class RefreshTokenRequest {
         private String token;
-        private Map<String, Object> user;
 
-        public LoginResponse(String token, User user) {
-            this.token = token;
-            this.user = new HashMap<>();
-            this.user.put("id", user.getId());
-            this.user.put("username", user.getUsername());
-            this.user.put("tenantId", user.getTenantId());
-            this.user.put("roles", user.getRoles());
-            this.user.put("email", user.getEmail());
-            this.user.put("status", user.getStatus());
-        }
-    }
-
-    @lombok.Data
-    public static class TokenResponse {
-        private String token;
-
-        public TokenResponse(String token) {
-            this.token = token;
-        }
-    }
-
-    @lombok.Data
-    public static class ValidationResponse {
-        private boolean valid;
-
-        public ValidationResponse(boolean valid) {
-            this.valid = valid;
-        }
-    }
-
-    @lombok.Data
-    public static class MessageResponse {
-        private String message;
-
-        public MessageResponse(String message) {
-            this.message = message;
-        }
-    }
-
-    @lombok.Data
-    public static class ErrorResponse {
-        private String error;
-
-        public ErrorResponse(String error) {
-            this.error = error;
-        }
+        // Getters and setters
+        public String getToken() { return token; }
+        public void setToken(String token) { this.token = token; }
     }
 }
