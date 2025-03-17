@@ -1,222 +1,231 @@
-/* Custom Styles for JobFlow */
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideIn {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-/* General Styles */
-.animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-.animate-slide-in {
-    animation: slideIn 0.3s ease-in-out;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-
-/* Custom Components */
-.task-card {
-    transition: transform 0.2s ease-in-out;
-}
-
-.task-card:hover {
-    transform: translateY(-2px);
-}
-
-.workflow-node {
-    transition: all 0.2s ease-in-out;
-}
-
-.workflow-node:hover {
-    filter: brightness(1.1);
-    transform: scale(1.02);
-}
-
-/* Status Indicators */
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 6px;
-}
-
-.status-dot.success {
-    background-color: #10B981;
-}
-
-.status-dot.warning {
-    background-color: #F59E0B;
-}
-
-.status-dot.error {
-    background-color: #EF4444;
-}
-
-.status-dot.running {
-    background-color: #3B82F6;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-/* Custom Button Styles */
-.btn-primary {
-    @apply bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 
-           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 
-           transition-colors duration-200;
-}
-
-.btn-secondary {
-    @apply bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 
-           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 
-           transition-colors duration-200;
-}
-
-.btn-danger {
-    @apply bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 
-           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 
-           transition-colors duration-200;
-}
-
-/* Form Elements */
-.form-input {
-    @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-           focus:border-indigo-500 focus:ring-indigo-500;
-}
-
-.form-label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
-}
-
-.form-select {
-    @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-           focus:border-indigo-500 focus:ring-indigo-500;
-}
-
-/* Card Styles */
-.dashboard-card {
-    @apply bg-white overflow-hidden shadow-sm rounded-lg hover:shadow-md 
-           transition-shadow duration-200;
-}
-
-/* Table Styles */
-.table-header {
-    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
-}
-
-.table-cell {
-    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+/* Base Styles */
+body {
+    font-family: 'Inter', sans-serif;
 }
 
 /* Navigation */
 .nav-link {
-    @apply text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium 
-           transition-colors duration-200;
+    @apply border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium;
 }
 
-.nav-link.active {
-    @apply text-indigo-600 font-semibold;
+.nav-link-active {
+    @apply border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium;
 }
 
-/* Tooltips */
-.tooltip {
-    @apply invisible absolute;
+/* Cards */
+.stat-card {
+    @apply bg-white overflow-hidden shadow rounded-lg;
 }
 
-.has-tooltip:hover .tooltip {
-    @apply visible z-50;
+.stat-card-content {
+    @apply p-5;
+}
+
+.stat-card-icon {
+    @apply flex-shrink-0;
+}
+
+.stat-card-icon i {
+    @apply text-2xl;
+}
+
+.stat-card-body {
+    @apply ml-5 w-0 flex-1;
+}
+
+.stat-card-label {
+    @apply text-sm font-medium text-gray-500 truncate;
+}
+
+.stat-card-value {
+    @apply text-2xl font-semibold text-gray-900;
+}
+
+/* Buttons */
+.btn {
+    @apply inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+    @apply border-transparent text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500;
+}
+
+.btn-secondary {
+    @apply border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-indigo-500;
+}
+
+/* Tables */
+.table-container {
+    @apply shadow overflow-hidden border-b border-gray-200 sm:rounded-lg;
+}
+
+.table {
+    @apply min-w-full divide-y divide-gray-200;
+}
+
+.table-header {
+    @apply bg-gray-50;
+}
+
+.table-header th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.table-body {
+    @apply bg-white divide-y divide-gray-200;
+}
+
+.table-row {
+    @apply hover:bg-gray-50;
+}
+
+.table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-500;
+}
+
+/* Status Badges */
+.status-badge {
+    @apply px-2 inline-flex text-xs leading-5 font-semibold rounded-full;
+}
+
+.status-pending {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.status-running {
+    @apply bg-blue-100 text-blue-800;
+}
+
+.status-completed {
+    @apply bg-green-100 text-green-800;
+}
+
+.status-failed {
+    @apply bg-red-100 text-red-800;
+}
+
+.status-cancelled {
+    @apply bg-gray-100 text-gray-800;
+}
+
+.status-timeout {
+    @apply bg-orange-100 text-orange-800;
+}
+
+.status-retry {
+    @apply bg-purple-100 text-purple-800;
+}
+
+/* Forms */
+.form-group {
+    @apply mb-4;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700;
+}
+
+.form-input {
+    @apply mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md;
+}
+
+.form-select {
+    @apply mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md;
+}
+
+/* Modals */
+.modal {
+    @apply fixed z-10 inset-0 overflow-y-auto;
+}
+
+.modal-backdrop {
+    @apply fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity;
+}
+
+.modal-container {
+    @apply inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full;
+}
+
+.modal-header {
+    @apply bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4;
+}
+
+.modal-body {
+    @apply mt-3 text-center sm:mt-0 sm:text-left;
+}
+
+.modal-footer {
+    @apply bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse;
+}
+
+/* Charts */
+.chart-container {
+    @apply bg-white shadow rounded-lg;
+}
+
+.chart-header {
+    @apply px-4 py-5 sm:p-6;
+}
+
+.chart-title {
+    @apply text-lg leading-6 font-medium text-gray-900 mb-4;
+}
+
+/* Activity Feed */
+.activity-feed {
+    @apply flow-root;
+}
+
+.activity-list {
+    @apply -mb-8;
+}
+
+.activity-item {
+    @apply relative pb-8;
+}
+
+.activity-line {
+    @apply absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200;
+}
+
+.activity-icon {
+    @apply h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white;
+}
+
+.activity-content {
+    @apply min-w-0 flex-1 pt-1.5 flex justify-between space-x-4;
+}
+
+.activity-message {
+    @apply text-sm text-gray-500;
+}
+
+.activity-time {
+    @apply text-right text-sm whitespace-nowrap text-gray-500;
 }
 
 /* Loading Spinner */
 .spinner {
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #3498db;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Modal */
-.modal-backdrop {
-    @apply fixed inset-0 bg-black bg-opacity-50 transition-opacity;
-}
-
-.modal-content {
-    @apply bg-white rounded-lg overflow-hidden shadow-xl transform transition-all 
-           sm:max-w-lg sm:w-full;
+    @apply animate-spin -ml-1 mr-3 h-5 w-5 text-white;
 }
 
 /* Notifications */
 .notification {
-    @apply fixed right-4 top-4 bg-white shadow-lg rounded-lg p-4 max-w-sm w-full 
-           transform transition-transform duration-300;
+    @apply fixed bottom-0 right-0 m-6 p-4 rounded-lg shadow-lg;
 }
 
-.notification.success {
-    @apply border-l-4 border-green-500;
+.notification-success {
+    @apply bg-green-500 text-white;
 }
 
-.notification.error {
-    @apply border-l-4 border-red-500;
+.notification-error {
+    @apply bg-red-500 text-white;
 }
 
-.notification.warning {
-    @apply border-l-4 border-yellow-500;
+.notification-info {
+    @apply bg-blue-500 text-white;
 }
 
-/* Progress Bar */
-.progress-bar {
-    @apply bg-gray-200 rounded-full h-2 overflow-hidden;
-}
-
-.progress-bar-fill {
-    @apply bg-indigo-600 h-2 rounded-full transition-all duration-300;
-}
-
-/* Responsive Design Helpers */
-@media (max-width: 640px) {
-    .mobile-menu {
-        @apply fixed inset-0 bg-white z-50 transform transition-transform duration-300;
-    }
-    
-    .mobile-menu.hidden {
-        transform: translateX(-100%);
-    }
+.notification-warning {
+    @apply bg-yellow-500 text-white;
 }
