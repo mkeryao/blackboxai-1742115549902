@@ -1,195 +1,115 @@
 package com.jobflow.service;
 
-import com.jobflow.domain.Notification;
+import com.jobflow.domain.NotificationConfig;
 import com.jobflow.domain.Task;
-import com.jobflow.domain.User;
 import com.jobflow.domain.Workflow;
 
 import java.util.List;
 import java.util.Map;
 
-/**
- * Service interface for managing notifications
- */
-public interface NotificationService extends BaseService<Notification> {
-    
+public interface NotificationService {
     /**
-     * Send notification
-     * @param notification Notification to send
-     * @param operator User performing the operation
-     * @return true if sent successfully
+     * Send notifications for a task event
      */
-    boolean sendNotification(Notification notification, String operator);
+    void sendTaskNotifications(Task task, NotificationConfig.NotificationType eventType, Map<String, Object> context);
 
     /**
-     * Send task notification
-     * @param task Task
-     * @param user User to notify
-     * @param type Notification type
-     * @param level Notification level
-     * @param content Notification content
-     * @param operator User performing the operation
-     * @return true if sent successfully
+     * Send notifications for a workflow event
      */
-    boolean sendTaskNotification(Task task, User user, 
-                               Notification.NotificationType type,
-                               Notification.NotificationLevel level,
-                               String content, String operator);
+    void sendWorkflowNotifications(Workflow workflow, NotificationConfig.NotificationType eventType, Map<String, Object> context);
 
     /**
-     * Send workflow notification
-     * @param workflow Workflow
-     * @param user User to notify
-     * @param type Notification type
-     * @param level Notification level
-     * @param content Notification content
-     * @param operator User performing the operation
-     * @return true if sent successfully
+     * Send a single notification
      */
-    boolean sendWorkflowNotification(Workflow workflow, User user,
-                                   Notification.NotificationType type,
-                                   Notification.NotificationLevel level,
-                                   String content, String operator);
+    void sendNotification(NotificationConfig config, String content, Map<String, Object> context);
 
     /**
-     * Send system notification
-     * @param users List of users to notify
-     * @param type Notification type
-     * @param level Notification level
-     * @param title Notification title
-     * @param content Notification content
-     * @param operator User performing the operation
-     * @return Number of notifications sent successfully
+     * Get notification history for a task
      */
-    int sendSystemNotification(List<User> users,
-                             Notification.NotificationType type,
-                             Notification.NotificationLevel level,
-                             String title, String content, String operator);
+    List<Map<String, Object>> getTaskNotificationHistory(Long taskId);
 
     /**
-     * Retry failed notification
-     * @param notificationId Notification ID
-     * @param operator User performing the operation
-     * @return true if retry successful
+     * Get notification history for a workflow
      */
-    boolean retryNotification(Long notificationId, String operator);
-
-    /**
-     * Cancel pending notification
-     * @param notificationId Notification ID
-     * @param operator User performing the operation
-     */
-    void cancelNotification(Long notificationId, String operator);
-
-    /**
-     * Find pending notifications
-     * @return List of pending notifications
-     */
-    List<Notification> findPendingNotifications();
-
-    /**
-     * Find failed notifications eligible for retry
-     * @return List of retryable notifications
-     */
-    List<Notification> findRetryableNotifications();
-
-    /**
-     * Find notifications by source
-     * @param source Notification source
-     * @param sourceId Source ID
-     * @param tenantId Tenant ID
-     * @return List of notifications
-     */
-    List<Notification> findBySource(Notification.NotificationSource source, 
-                                  Long sourceId, Long tenantId);
-
-    /**
-     * Find notifications by user
-     * @param userId User ID
-     * @param tenantId Tenant ID
-     * @return List of notifications
-     */
-    List<Notification> findByUser(Long userId, Long tenantId);
+    List<Map<String, Object>> getWorkflowNotificationHistory(Long workflowId);
 
     /**
      * Get notification statistics
-     * @param tenantId Tenant ID
-     * @return Notification statistics
      */
-    NotificationStatistics getNotificationStatistics(Long tenantId);
+    Map<String, Object> getNotificationStatistics(Long tenantId);
 
     /**
-     * Test notification channel
-     * @param type Notification type
-     * @param recipient Recipient (email/wechat/webhook)
-     * @param operator User performing the operation
-     * @return true if test successful
+     * Test notification configuration
      */
-    boolean testNotificationChannel(Notification.NotificationType type, 
-                                  String recipient, String operator);
+    boolean testNotificationConfig(NotificationConfig config);
 
     /**
-     * Inner class for notification statistics
+     * Get supported notification channels
      */
-    class NotificationStatistics {
-        private long totalNotifications;
-        private long pendingNotifications;
-        private long sentNotifications;
-        private long failedNotifications;
-        private Map<Notification.NotificationType, Long> notificationsByType;
-        private Map<Notification.NotificationLevel, Long> notificationsByLevel;
-        private Map<Notification.NotificationSource, Long> notificationsBySource;
-        private double averageDeliveryTime;
-        private double successRate;
+    List<NotificationConfig.NotificationChannel> getSupportedChannels();
 
-        // Getters and setters
-        public long getTotalNotifications() { return totalNotifications; }
-        public void setTotalNotifications(long totalNotifications) { 
-            this.totalNotifications = totalNotifications; 
-        }
-        
-        public long getPendingNotifications() { return pendingNotifications; }
-        public void setPendingNotifications(long pendingNotifications) { 
-            this.pendingNotifications = pendingNotifications; 
-        }
-        
-        public long getSentNotifications() { return sentNotifications; }
-        public void setSentNotifications(long sentNotifications) { 
-            this.sentNotifications = sentNotifications; 
-        }
-        
-        public long getFailedNotifications() { return failedNotifications; }
-        public void setFailedNotifications(long failedNotifications) { 
-            this.failedNotifications = failedNotifications; 
-        }
-        
-        public Map<Notification.NotificationType, Long> getNotificationsByType() { 
-            return notificationsByType; 
-        }
-        public void setNotificationsByType(Map<Notification.NotificationType, Long> notificationsByType) { 
-            this.notificationsByType = notificationsByType; 
-        }
-        
-        public Map<Notification.NotificationLevel, Long> getNotificationsByLevel() { 
-            return notificationsByLevel; 
-        }
-        public void setNotificationsByLevel(Map<Notification.NotificationLevel, Long> notificationsByLevel) { 
-            this.notificationsByLevel = notificationsByLevel; 
-        }
-        
-        public Map<Notification.NotificationSource, Long> getNotificationsBySource() { 
-            return notificationsBySource; 
-        }
-        public void setNotificationsBySource(Map<Notification.NotificationSource, Long> notificationsBySource) { 
-            this.notificationsBySource = notificationsBySource; 
-        }
-        
-        public double getAverageDeliveryTime() { return averageDeliveryTime; }
-        public void setAverageDeliveryTime(double averageDeliveryTime) { 
-            this.averageDeliveryTime = averageDeliveryTime; 
-        }
-        
-        public double getSuccessRate() { return successRate; }
-        public void setSuccessRate(double successRate) { this.successRate = successRate; }
-    }
+    /**
+     * Get notification templates
+     */
+    Map<String, String> getNotificationTemplates();
+
+    /**
+     * Validate notification template
+     */
+    boolean validateTemplate(String template);
+
+    /**
+     * Process notification template
+     */
+    String processTemplate(String template, Map<String, Object> context);
+
+    /**
+     * Get notification recipients
+     */
+    List<String> getNotificationRecipients(NotificationConfig config);
+
+    /**
+     * Validate notification recipient
+     */
+    boolean validateRecipient(String recipient, NotificationConfig.NotificationChannel channel);
+
+    /**
+     * Get failed notifications
+     */
+    List<Map<String, Object>> getFailedNotifications();
+
+    /**
+     * Retry failed notification
+     */
+    boolean retryFailedNotification(Long notificationId);
+
+    /**
+     * Get notification settings
+     */
+    Map<String, Object> getNotificationSettings();
+
+    /**
+     * Update notification settings
+     */
+    void updateNotificationSettings(Map<String, Object> settings);
+
+    /**
+     * Enable/disable notifications
+     */
+    void setNotificationsEnabled(boolean enabled);
+
+    /**
+     * Check if notifications are enabled
+     */
+    boolean areNotificationsEnabled();
+
+    /**
+     * Get notification rate limits
+     */
+    Map<String, Integer> getNotificationRateLimits();
+
+    /**
+     * Update notification rate limits
+     */
+    void updateNotificationRateLimits(Map<String, Integer> rateLimits);
 }
