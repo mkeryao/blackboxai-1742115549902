@@ -5,45 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar - JobFlow</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Local Tailwind CSS -->
+    <script src="/lib/tailwind/tailwind.min.js"></script>
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Local Fonts -->
+    <link href="/lib/fonts/inter.css" rel="stylesheet">
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Local Font Awesome -->
+    <link rel="stylesheet" href="/lib/fontawesome/css/local-icons.css">
     
-    <!-- FullCalendar -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <!-- Local FullCalendar -->
+    <link href="/lib/fullcalendar/main.min.css" rel="stylesheet">
+    <script src="/lib/fullcalendar/main.min.js"></script>
     
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/styles.css">
-    
-    <style>
-        .fc-event {
-            cursor: pointer;
-        }
-        .fc-event:hover {
-            opacity: 0.9;
-        }
-        .fc-toolbar-title {
-            font-size: 1.5rem !important;
-            font-weight: 600 !important;
-        }
-        .fc-button {
-            background-color: #4F46E5 !important;
-            border-color: #4F46E5 !important;
-        }
-        .fc-button:hover {
-            background-color: #4338CA !important;
-            border-color: #4338CA !important;
-        }
-        .fc-day-today {
-            background-color: #EEF2FF !important;
-        }
-    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
@@ -56,18 +32,10 @@
                         <span class="ml-2 text-xl font-bold text-gray-800">JobFlow</span>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="/index.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Dashboard
-                        </a>
-                        <a href="/tasks.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Tasks
-                        </a>
-                        <a href="/workflows.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Workflows
-                        </a>
-                        <a href="/calendar.html" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Calendar
-                        </a>
+                        <a href="/index.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Dashboard</a>
+                        <a href="/tasks.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Tasks</a>
+                        <a href="/workflows.html" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Workflows</a>
+                        <a href="/calendar.html" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Calendar</a>
                     </div>
                 </div>
             </div>
@@ -79,9 +47,7 @@
         <!-- Header -->
         <div class="md:flex md:items-center md:justify-between mb-6">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                    Calendar
-                </h2>
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Calendar</h2>
             </div>
             <div class="mt-4 flex md:mt-0 md:ml-4">
                 <button type="button" id="createEventBtn" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -99,141 +65,12 @@
         </div>
     </div>
 
-    <!-- Create Event Modal -->
-    <div id="createEventModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form id="createEventForm">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="mb-4">
-                            <label for="eventTitle" class="block text-sm font-medium text-gray-700">Event Title</label>
-                            <input type="text" id="eventTitle" name="title" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                        </div>
-                        <div class="mb-4">
-                            <label for="eventType" class="block text-sm font-medium text-gray-700">Event Type</label>
-                            <select id="eventType" name="type" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                <option value="task">Task</option>
-                                <option value="workflow">Workflow</option>
-                                <option value="meeting">Meeting</option>
-                                <option value="reminder">Reminder</option>
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="eventStart" class="block text-sm font-medium text-gray-700">Start Date</label>
-                                <input type="datetime-local" id="eventStart" name="start" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="eventEnd" class="block text-sm font-medium text-gray-700">End Date</label>
-                                <input type="datetime-local" id="eventEnd" name="end" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <label for="eventDescription" class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea id="eventDescription" name="description" rows="3" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
-                        </div>
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700">Recurrence</label>
-                            <div class="mt-2 space-y-2">
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="recurrenceEnabled" name="recurrenceEnabled" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                    <label for="recurrenceEnabled" class="ml-2 text-sm text-gray-700">Enable Recurrence</label>
-                                </div>
-                                <div id="recurrenceOptions" class="hidden ml-6 space-y-2">
-                                    <select id="recurrenceType" name="recurrenceType" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                        <option value="daily">Daily</option>
-                                        <option value="weekly">Weekly</option>
-                                        <option value="monthly">Monthly</option>
-                                    </select>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-sm text-gray-700">Repeat every</span>
-                                        <input type="number" id="recurrenceInterval" name="recurrenceInterval" min="1" value="1" class="w-20 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm sm:text-sm border-gray-300 rounded-md">
-                                        <span id="recurrenceUnit" class="text-sm text-gray-700">days</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Create
-                        </button>
-                        <button type="button" onclick="closeModal('createEventModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Event Details Modal -->
-    <div id="eventDetailsModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="eventDetailsTitle"></h3>
-                            <div class="mt-4 space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Type</label>
-                                    <p id="eventDetailsType" class="mt-1 text-sm text-gray-900"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Date & Time</label>
-                                    <p id="eventDetailsDateTime" class="mt-1 text-sm text-gray-900"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Description</label>
-                                    <p id="eventDetailsDescription" class="mt-1 text-sm text-gray-900"></p>
-                                </div>
-                                <div id="eventDetailsRecurrence" class="hidden">
-                                    <label class="block text-sm font-medium text-gray-700">Recurrence</label>
-                                    <p id="eventDetailsRecurrencePattern" class="mt-1 text-sm text-gray-900"></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" id="editEventBtn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        Edit
-                    </button>
-                    <button type="button" id="deleteEventBtn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        Delete
-                    </button>
-                    <button type="button" onclick="closeModal('eventDetailsModal')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="/js/app.js"></script>
     <script>
-        let calendar;
-        let selectedEvent = null;
-
-        // Initialize calendar
         document.addEventListener('DOMContentLoaded', () => {
-            initializeCalendar();
-            setupEventListeners();
-            loadEvents();
-        });
-
-        // Initialize FullCalendar
-        function initializeCalendar() {
             const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
+            const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 headerToolbar: {
                     left: 'prev,next today',
@@ -243,178 +80,10 @@
                 editable: true,
                 selectable: true,
                 selectMirror: true,
-                dayMaxEvents: true,
-                eventClick: handleEventClick,
-                eventDrop: handleEventDrop,
-                eventResize: handleEventResize,
-                select: handleDateSelect
+                dayMaxEvents: true
             });
             calendar.render();
-        }
-
-        // Load events from API
-        async function loadEvents() {
-            try {
-                const loader = JobFlow.UI.showLoading();
-                const events = await JobFlow.api.getCalendarEvents();
-                calendar.removeAllEvents();
-                calendar.addEventSource(events);
-                JobFlow.UI.hideLoading(loader);
-            } catch (error) {
-                JobFlow.UI.showNotification(error.message, 'error');
-            }
-        }
-
-        // Handle event click
-        function handleEventClick(info) {
-            selectedEvent = info.event;
-            showEventDetails(selectedEvent);
-        }
-
-        // Handle date selection
-        function handleDateSelect(info) {
-            document.getElementById('eventStart').value = info.startStr;
-            document.getElementById('eventEnd').value = info.endStr;
-            document.getElementById('createEventModal').classList.remove('hidden');
-        }
-
-        // Handle event drag and drop
-        async function handleEventDrop(info) {
-            try {
-                const loader = JobFlow.UI.showLoading();
-                await JobFlow.api.updateEvent({
-                    id: info.event.id,
-                    start: info.event.startStr,
-                    end: info.event.endStr
-                });
-                JobFlow.UI.hideLoading(loader);
-                JobFlow.UI.showNotification('Event updated successfully', 'success');
-            } catch (error) {
-                info.revert();
-                JobFlow.UI.showNotification(error.message, 'error');
-            }
-        }
-
-        // Handle event resize
-        async function handleEventResize(info) {
-            try {
-                const loader = JobFlow.UI.showLoading();
-                await JobFlow.api.updateEvent({
-                    id: info.event.id,
-                    start: info.event.startStr,
-                    end: info.event.endStr
-                });
-                JobFlow.UI.hideLoading(loader);
-                JobFlow.UI.showNotification('Event updated successfully', 'success');
-            } catch (error) {
-                info.revert();
-                JobFlow.UI.showNotification(error.message, 'error');
-            }
-        }
-
-        // Show event details
-        function showEventDetails(event) {
-            document.getElementById('eventDetailsTitle').textContent = event.title;
-            document.getElementById('eventDetailsType').textContent = event.extendedProps.type;
-            document.getElementById('eventDetailsDateTime').textContent = `${formatDate(event.start)} - ${formatDate(event.end)}`;
-            document.getElementById('eventDetailsDescription').textContent = event.extendedProps.description || 'No description';
-            
-            if (event.extendedProps.recurrence) {
-                document.getElementById('eventDetailsRecurrence').classList.remove('hidden');
-                document.getElementById('eventDetailsRecurrencePattern').textContent = formatRecurrencePattern(event.extendedProps.recurrence);
-            } else {
-                document.getElementById('eventDetailsRecurrence').classList.add('hidden');
-            }
-            
-            document.getElementById('eventDetailsModal').classList.remove('hidden');
-        }
-
-        // Format date
-        function formatDate(date) {
-            return new Date(date).toLocaleString();
-        }
-
-        // Format recurrence pattern
-        function formatRecurrencePattern(recurrence) {
-            const patterns = {
-                daily: 'Every day',
-                weekly: 'Every week',
-                monthly: 'Every month'
-            };
-            return `${patterns[recurrence.type]} (${recurrence.interval} ${recurrence.type.slice(0, -2)}(s))`;
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Create event button
-            document.getElementById('createEventBtn').addEventListener('click', () => {
-                document.getElementById('createEventModal').classList.remove('hidden');
-            });
-
-            // Create event form
-            document.getElementById('createEventForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                try {
-                    const formData = new FormData(e.target);
-                    const event = Object.fromEntries(formData.entries());
-                    
-                    if (event.recurrenceEnabled) {
-                        event.recurrence = {
-                            type: event.recurrenceType,
-                            interval: parseInt(event.recurrenceInterval)
-                        };
-                    }
-                    
-                    const loader = JobFlow.UI.showLoading();
-                    await JobFlow.api.createEvent(event);
-                    JobFlow.UI.hideLoading(loader);
-                    
-                    closeModal('createEventModal');
-                    loadEvents();
-                    JobFlow.UI.showNotification('Event created successfully', 'success');
-                } catch (error) {
-                    JobFlow.UI.showNotification(error.message, 'error');
-                }
-            });
-
-            // Recurrence checkbox
-            document.getElementById('recurrenceEnabled').addEventListener('change', (e) => {
-                const recurrenceOptions = document.getElementById('recurrenceOptions');
-                recurrenceOptions.classList.toggle('hidden', !e.target.checked);
-            });
-
-            // Recurrence type
-            document.getElementById('recurrenceType').addEventListener('change', (e) => {
-                const unit = document.getElementById('recurrenceUnit');
-                unit.textContent = e.target.value.slice(0, -2) + 's';
-            });
-
-            // Delete event button
-            document.getElementById('deleteEventBtn').addEventListener('click', async () => {
-                if (selectedEvent && confirm('Are you sure you want to delete this event?')) {
-                    try {
-                        const loader = JobFlow.UI.showLoading();
-                        await JobFlow.api.deleteEvent(selectedEvent.id);
-                        JobFlow.UI.hideLoading(loader);
-                        
-                        closeModal('eventDetailsModal');
-                        selectedEvent.remove();
-                        JobFlow.UI.showNotification('Event deleted successfully', 'success');
-                    } catch (error) {
-                        JobFlow.UI.showNotification(error.message, 'error');
-                    }
-                }
-            });
-        }
-
-        // Close modal
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-            if (modalId === 'createEventModal') {
-                document.getElementById('createEventForm').reset();
-                document.getElementById('recurrenceOptions').classList.add('hidden');
-            }
-        }
+        });
     </script>
 </body>
 </html>
