@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -17,12 +18,12 @@ public class Task extends BaseEntity {
     private Integer retryDelay;
     private TaskStatus status;
     private TaskPriority priority;
-    private LocalDateTime startTime;  // Task scheduled start time
-    private LocalDateTime endTime;    // Task scheduled end time
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private Long workflowId;
     private Integer sequence;
     private String parameters;
-    private String notification;
+    private List<NotificationConfig> notifications;  // Multiple notification configurations
 
     public enum TaskStatus {
         PENDING,    // Task is created but not yet scheduled
@@ -100,5 +101,37 @@ public class Task extends BaseEntity {
         return TaskStatus.FAILED.equals(status) || 
                TaskStatus.TIMEOUT.equals(status) ||
                (TaskStatus.RETRY.equals(status) && !canRetry());
+    }
+
+    // Get notifications for a specific event type
+    public List<NotificationConfig> getNotificationsForEvent(NotificationConfig.NotificationType type) {
+        if (notifications == null) {
+            return List.of();
+        }
+        return notifications.stream()
+            .filter(config -> config.isEnabled() && config.shouldNotifyOn(type))
+            .toList();
+    }
+
+    // Add a notification configuration
+    public void addNotification(NotificationConfig config) {
+        if (notifications == null) {
+            notifications = new java.util.ArrayList<>();
+        }
+        notifications.add(config);
+    }
+
+    // Remove a notification configuration
+    public void removeNotification(NotificationConfig config) {
+        if (notifications != null) {
+            notifications.remove(config);
+        }
+    }
+
+    // Clear all notifications
+    public void clearNotifications() {
+        if (notifications != null) {
+            notifications.clear();
+        }
     }
 }
