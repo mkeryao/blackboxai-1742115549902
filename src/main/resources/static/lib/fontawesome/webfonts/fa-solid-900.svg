@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" >
+<svg xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <font id="FontAwesome6Pro-Solid" horiz-adv-x="448">
+    <font-face font-family="Font Awesome 6 Pro Solid" units-per-em="512" ascent="448" descent="-64"/>
+    <missing-glyph horiz-adv-x="448" />
+    <!-- Basic Icons -->
+    <glyph unicode="&#xf00d;" horiz-adv-x="320" d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"/>
+    <glyph unicode="&#xf067;" horiz-adv-x="448" d="M256 432c0 8.8-7.2 16-16 16H208c-8.8 0-16-7.2-16-16V272H32c-8.8 0-16-7.2-16-16V224c0-8.8 7.2-16 16-16H192V32c0-8.8 7.2-16 16-16H240c8.8 0 16 7.2 16 16V208H416c8.8 0 16 7.2 16 16V256c0 8.8-7.2 16-16 16H256V432z"/>
+    <glyph unicode="&#xf068;" horiz-adv-x="448" d="M416 272H32c-8.8 0-16-7.2-16-16V224c0-8.8 7.2-16 16-16H416c8.8 0 16 7.2 16 16V256c0 8.8-7.2 16-16 16z"/>
+    <glyph unicode="&#xf061;" horiz-adv-x="448" d="M438.6 278.6L278.6 438.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L338.8 288H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H338.8L233.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L438.6 233.4c12.5 12.5 12.5 32.8 0 45.3z"/>
+  </font>
+</defs>
+</svg>
